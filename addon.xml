@@ -23,10 +23,9 @@
     <extension library="lib" point="xbmc.python.module"/>
 
     <extension point="xbmc.addon.metadata">
-        <language>en</language>
         <platform>all</platform>
-        <summary lang="en">An unofficial client library for Google Music</summary>
-        <description lang="en">An unofficial client library for Google Music</description>
+        <summary lang="en_GB">An unofficial client library for Google Music</summary>
+        <description lang="en_GB">An unofficial client library for Google Music</description>
         <license>MIT</license>
         <website>https://pypi.python.org/pypi/gmusicapi/</website>
         <source>https://github.com/simon-weber/gmusicapi</source>

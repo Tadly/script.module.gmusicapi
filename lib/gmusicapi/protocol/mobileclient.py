@@ -79,6 +79,7 @@ sj_video = {
         'id': {'type': 'string'},
         'title': {'type': 'string', 'required': False},
         'thumbnails': {'type': 'array',
+                       'required': False,
                        'items': {'type': 'object', 'properties': {
                            'url': {'type': 'string'},
                            'width': {'type': 'integer'},
@@ -1603,7 +1604,9 @@ class GetAlbum(McCall):
 
     @staticmethod
     def dynamic_params(album_id, tracks):
-        return {'nid': album_id, 'include-tracks': tracks}
+        include_tracks = bool(tracks) if tracks else None
+
+        return {'nid': album_id, 'include-tracks': include_tracks}
 
 
 class IncrementPlayCount(McCall):

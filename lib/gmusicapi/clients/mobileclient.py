@@ -346,7 +346,9 @@ class Mobileclient(_Base):
     def get_stream_url(self, song_id, device_id=None, quality='hi'):
         """Returns a url that will point to an mp3 file.
 
-        :param song_id: a single song id
+        :param song_id: A single song id.
+          This can be ``'storeId'`` from a store song, ``'id'`` from an uploaded song, or
+          ``'trackId'`` from a playlist entry.
         :param device_id: (optional) defaults to ``android_id`` from login.
 
           Otherwise, provide a mobile device id as a string.
@@ -621,6 +623,8 @@ class Mobileclient(_Base):
 
         :param playlist_id: the id of the playlist to add to.
         :param song_ids: a list of song ids, or a single song id.
+          These can be ``'storeId'`` from a store song, ``'id'`` from an uploaded song, or
+          ``'trackId'`` from a playlist entry.
 
         Playlists have a maximum size of 1000 songs.
         Calls may fail before that point (presumably) due to
@@ -1657,12 +1661,13 @@ class Mobileclient(_Base):
 
         return stations[0].get('tracks', [])
 
-    def search(self, query, max_results=50):
+    def search(self, query, max_results=None):
         """Queries Google Music for content.
 
         :param query: a string keyword to search with. Capitalization and punctuation are ignored.
         :param max_results: Maximum number of items to be retrieved.
           The maximum accepted value is 100. If set higher, results are limited to 10.
+          A value of ``None`` allows up to 999 results per type. Default is ``None``.
 
         The results are returned in a dictionary with keys:
         ``album_hits, artist_hits, playlist_hits, podcast_hits,

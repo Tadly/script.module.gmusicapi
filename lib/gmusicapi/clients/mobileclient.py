@@ -47,15 +47,23 @@ class Mobileclient(_Base):
         """Ensure that a given device_id belongs to the user supplying it."""
         if is_mac:  # Always allow logins with MAC address.
             return device_id
-        devices = [
-            d['id'][2:] if d['id'].startswith('0x') else d['id'].replace(':', '')
-            for d in self.get_registered_devices()
-        ]
-        if device_id in devices:
+
+        device_ids = []
+        for d in self.get_registered_devices():
+            if d['id'].startswith('ios:'):
+                device_ids.append(d['id'])
+            elif d['id'].startswith('0x'):
+                # old android format
+                device_ids.append(d['id'][2:])
+            else:
+                # mac address format
+                device_ids.append(d['id'].replace(':', ''))
+
+        if device_id in device_ids:
             return device_id
         else:
             self.logout()
-            raise InvalidDeviceId('Invalid device_id %s.' % device_id, devices)
+            raise InvalidDeviceId('Invalid device_id %s.' % device_id, device_ids)
 
     @property
     def locale(self):
@@ -1593,6 +1601,8 @@ class Mobileclient(_Base):
 
         Returns a list of dictionaries that each represent a radio station.
 
+        This includes any stations listened to recently, which might not be in the library.
+
         :param incremental: if True, return a generator that yields lists
           of at most 1000 stations
           as they are retrieved from the server. This can be useful for
@@ -1617,7 +1627,8 @@ class Mobileclient(_Base):
                     # possible keys:
                     #  albumId, artistId, genreId, trackId, trackLockerId
                 },
-                'id': '69f1bfce-308a-313e-9ed2-e50abe33a25d'
+                'id': '69f1bfce-308a-313e-9ed2-e50abe33a25d',
+                'inLibrary': True
             },
         """
         return self._get_all_items(mobileclient.ListStations, incremental,
@@ -1661,16 +1672,18 @@ class Mobileclient(_Base):
 
         return stations[0].get('tracks', [])
 
-    def search(self, query, max_results=None):
+    def search(self, query, max_results=100):
         """Queries Google Music for content.
 
         :param query: a string keyword to search with. Capitalization and punctuation are ignored.
         :param max_results: Maximum number of items to be retrieved.
           The maximum accepted value is 100. If set higher, results are limited to 10.
-          A value of ``None`` allows up to 999 results per type. Default is ``None``.
+          A value of ``None`` allows up to 1000 results per type but
+          won't return playlist nor situation results.
+          Default is ``100``.
 
         The results are returned in a dictionary with keys:
-        ``album_hits, artist_hits, playlist_hits, podcast_hits,
+        ``album_hits, artist_hits, genre_hits, playlist_hits, podcast_hits,
           situation_hits, song_hits, station_hits, video_hits``
         containing lists of results of that type.
 
@@ -1868,15 +1881,18 @@ class Mobileclient(_Base):
 
         res = self._make_call(mobileclient.Search, query, max_results)
 
-        hits = res.get('entries', [])
+        clusters = res.get('clusterDetail', [])
 
         hits_by_type = defaultdict(list)
-        for hit in hits:
-            hits_by_type[hit['type']].append(hit)
+        for cluster in clusters:
+            hit_type = cluster['cluster']['type']
+            hits = cluster.get('entries', [])
+            hits_by_type[hit_type].extend(hits)
 
         return {'album_hits': hits_by_type['3'],
                 'artist_hits': hits_by_type['2'],
                 'playlist_hits': hits_by_type['4'],
+                'genre_hits': hits_by_type['5'],
                 'podcast_hits': hits_by_type['9'],
                 'situation_hits': hits_by_type['7'],
                 'song_hits': hits_by_type['1'],

@@ -2,7 +2,7 @@
 <addon id="script.module.gmusicapi"
        name="gmusicapi"
        provider-name="simon-weber"
-       version="11.0.0">
+       version="11.0.4">
 
     <requires>
         <import addon="xbmc.python" version="2.19.0"/>
